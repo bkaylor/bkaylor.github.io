@@ -1,14 +1,27 @@
 body {
     font-family: Georgia;
     text-align: left;
+    margin: auto;
+    max-width: 600px;
+    padding: 20px;
+}
+
+footer {
+    text-align: center;
+}
+
+footer a {
+    margin-left: 5px;
 }
 
 #menu ul {
     list-style: none;
+    padding-left: 2px;
 }
 
 #menu li {
     display: inline;
+    margin: 2px;
 }
 
 img {
@@ -17,7 +30,7 @@ img {
 
 .container {
     display: grid;
-    grid-template-columns: 400px 400px 400px;
+    grid-template-columns: 400px 400px;
     grid-gap: 20px;
 }
 
