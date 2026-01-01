@@ -1,0 +1,163 @@
+
+
+<html>
+    <head>
+        <link rel="stylesheet" href="../styles.css">
+    </head>
+    <body>
+        <div id="menu">
+            <ul>
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../posts.html">Posts</a></li>
+                <li><a href="../projects.html">Projects</a></li>
+            </ul>
+        </div> 
+
+        <h2>Tasks</h2>
+        <p>
+        You have n tasks and m workers. Each task has a strength requirement stored in a 0-indexed integer array tasks, with the ith task requiring tasks[i] strength to complete. The strength of each worker is stored in a 0-indexed integer array workers, with the jth worker having workers[j] strength. Each worker can only be assigned to a single task and must have a strength greater than or equal to the task's strength requirement (i.e., workers[j] >= tasks[i]).
+        </p>
+        <p>
+Additionally, you have pills magical pills that will increase a worker's strength by strength. You can decide which workers receive the magical pills, however, you may only give each worker at most one magical pill.
+        </p>
+        <p>
+Given the 0-indexed integer arrays tasks and workers and the integers pills and strength, return the maximum number of tasks that can be completed.
+        </p>
+
+        <p>
+Example 1:
+        <pre>
+        Input: tasks = [3,2,1], workers = [0,3,3], pills = 1, strength = 1
+        Output: 3
+        Explanation:
+        We can assign the magical pill and tasks as follows:
+        - Give the magical pill to worker 0.
+        - Assign worker 0 to task 2 (0 + 1 >= 1)
+        - Assign worker 1 to task 1 (3 >= 2)
+        - Assign worker 2 to task 0 (3 >= 3)
+        </pre>
+        <p>
+
+        <p>
+Example 2:
+
+        <pre>
+        Input: tasks = [5,4], workers = [0,0,0], pills = 1, strength = 5
+        Output: 1
+        Explanation:
+        We can assign the magical pill and tasks as follows:
+        - Give the magical pill to worker 0.
+        - Assign worker 0 to task 0 (0 + 5 >= 5)
+        </pre>
+        </p>
+
+        <p>
+Example 3:
+
+        <pre>
+        Input: tasks = [10,15,30], workers = [0,10,10,10,10], pills = 3, strength = 10
+        Output: 2
+        Explanation:
+        We can assign the magical pills and tasks as follows:
+        - Give the magical pill to worker 0 and worker 1.
+        - Assign worker 0 to task 0 (0 + 10 >= 10)
+        - Assign worker 1 to task 1 (10 + 10 >= 15)
+        The last pill is not given because it will not make any worker strong enough for the last task.
+        </pre>
+        </p>
+        <p>
+Constraints:
+
+        <pre>
+        n == tasks.length
+        m == workers.length
+        1 <= n, m <= 5 * 104
+        0 <= pills <= m
+        0 <= tasks[i], workers[j], strength <= 109
+        </pre>
+
+        </p>
+        <p>
+        Function:
+        <pre>
+        int maxTaskAssign(vector<int>& tasks, vector<int>& workers, int pills, int strength) {
+            // ...
+        }
+        </pre>
+        </p>
+        <p>
+        How do we solve this? This was my first thought: 
+        <ul>
+            <li> First, assign only the tasks that can be handled by workers without the pill, where the worker strength is exactly enough to do the task.</li>
+            <li>Second, try using the pill, but again only see if this allows a new task to be handled by a worker with exactly the right strength.</li>
+            <li>Then, accept a worker who has higher strength than needed without use of a pill.</li> 
+            <li>Then, try using a pill AND accepting a worker who, with the pill, has more than the required strength.</li>
+        </ul>
+        </p>
+        <p>
+        My thought was sort of to go from least-wasteful to most-wasteful actions. With the resources that can be wasted being excess strength, and pills, and the combination of the two.
+        </p>
+        <p>
+        This seems to work about half of the time, but there's some case where this doesn't cover it. So, I'll continue thinking about it.
+        </p>
+        <p>
+        One idea was to flip the problem on its head a bit- rather than write a function that takes all the parameters and find the maximum tasks you can assign with these inputs, try to write a function that answers "Given these inputs, can we assign n tasks?"
+        </p>
+        <p>
+        Then, rather than having to figure it all out in one go, you can binary-search the possible answers until you find the maximum. For example, the minimum number of tasks assigned is always zero, and the maximum is always min(workers.size(), tasks.size()).
+        </p>
+        <p>
+        One thing I don't quite understand is, how do you get the intuition to do it this way? Maybe you can spend awhile writing a function that tries to find the maximum, and end up writing something that takes a very long time and tries many different configurations, keeping track of the best configuration. But, given each list can have up to 10^9 items, something like that could take an extremely long time.
+        </p>
+        <p>
+        Then, how do we write a function that tells us whether or not we can assign n tasks? Most of my ideas would look something like, "Start laying out the tasks optimally, and count the assigned tasks. If at some point we hit n, return true." Which, doesn't sound very useful. If we had a way to lay out the tasks optimally, we would just do that once and return the count of assigned tasks.
+        </p>
+        <p>
+        The hints for the problem are:
+        <ul>
+            <li>Is it possible to assign the first k smallest tasks to the workers?</li>
+            <li>How can you efficiently try every k?</li>
+        </ul>
+        And, I guess it makes sense that, if you can assign all but 1 task, there's no reason it would be any but the hardest one that would not be assigned.
+        </p>
+        <p>
+        Another intuition was, these lists should definitely both be sorted before we do any work, because we will want to be working optimally and assigning only the easiest tasks first, and we want to assign them to the least-valuable workers with the smallest strength first, only going deeper into the list of workers as needed.
+        </p>
+        <p>
+        I think I understand why my first thought of least-to-most wasteful is not good. Consider this test case:
+        <pre>
+        tasks = [1, 10, 11]
+        workers = [0, 10, 10, 10]
+        pills = 1
+        strength = 1
+        </pre>
+        Here, all tasks can be handled, if we save the pill for the 11-strength task. However, if we first consider tasks that can be handled exactly, then tasks that can be handled exactly with pills, we will waste the pill on the 0-strength worker. So, maybe we need to change the order this is done, and consider using pills for harder tasks before easier tasks. But, maybe this has some issues as well.
+        </p>
+        <p>
+        I wonder, is it possible to have a case where, giving a pill to assign the hardest task makes the assignment non-ideal? We should really only use the pill if it allows us to assign a task that was previously unable to be assigned at all ... I think.
+        </p>
+        <p>
+        Just switching the priority of the assignment strategies doesn't work either. There are cases where, if we accept a higher-strength worker doing a task instead of using a pill, we do a non-optimal assignment. Consider this case:
+        <pre>
+        tasks = [1, 2, 3]
+        workers = [0, 3, 3]
+        pills = 1
+        strength = 1
+        </pre>
+        If we assign worker with strength 3 to task with strength 1, we lose out on efficiency, because worker with strength 0 could have done task with strength 1 using the pill, and worker with strength 3 could've done the task with strength 2.
+        </p>
+        <p>
+        Currently, I iterate over all tasks and try to solve them one by one. Is that the way to do it? Do you always want to worry about the easiest unhandled task? I'd guess so. But we don't necessarily want to do the same with the workers. We want to consider workers based on their strength. This is not really helpful commentary. How do we know whether to use a pill for a task instead of letting a over-strong worker handle it? Could I create two test cases, one where you need to use a pill on a weaker task, one where you need to use an over-strong worker and save the pill?
+        </p>
+        <p>
+        Maybe it needs to try both ways. How can it know? Consider:
+        <pre>
+        tasks = [1, 2]
+        workers = [0, 1]
+        pills = 2
+        strength = 1
+        </pre>
+        Here, it must choose to use a pill for both workers, and to NOT assign task strength 1 to worker strength 1.
+        </p>
+    </body>
+</html>
